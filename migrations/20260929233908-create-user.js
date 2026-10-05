@@ -49,7 +49,7 @@ module.exports = {
       },
       profile_image_url: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: true
       },
       is_active: {
         type: Sequelize.BOOLEAN,

@@ -23,7 +23,7 @@ module.exports = {
       },
       expire_at: {
         type: Sequelize.STRING,
-        allowNull: falses
+        allowNull: false
       },
       createdAt: {
         allowNull: false,

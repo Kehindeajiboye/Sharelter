@@ -44,3 +44,8 @@ const loginSchema = Joi.object({
         'string.empty': 'Password is required',
     })
 })
+
+module.exports = {
+    signupSchema,
+    loginSchema
+}

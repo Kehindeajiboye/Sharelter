@@ -16,9 +16,9 @@ module.exports = (sequelize, DataTypes) => {
   Listing.init({
     listing_id: { type: DataTypes.STRING, primaryKey: true },
     user_id: DataTypes.STRING,
-    price: { type: DataTypes.DECIMAL, precision: 10, scale: 2 },
+    price: DataTypes.DECIMAL(12, 2),
     location: DataTypes.STRING,
-    description: DataTypes.STRING,
+    description: DataTypes.TEXT,
     listing_type: DataTypes.ENUM('apartment', 'hostel'),
     listing_image_main: DataTypes.STRING,
     bedroom: DataTypes.INTEGER,
@@ -27,10 +27,20 @@ module.exports = (sequelize, DataTypes) => {
     flatmate: DataTypes.ENUM('male', 'female', 'any'),
     size: DataTypes.ENUM('moderate', 'large'),
     verification_status: DataTypes.ENUM('pending', 'verified'),
-    listing_status: DataTypes.ENUM('available', 'not available')
-  }, {
-    sequelize,
-    modelName: 'Listing',
-  });
+    listing_status: DataTypes.ENUM('available', 'not available'),
+    title: DataTypes.STRING,
+    status: {
+      type: DataTypes.ENUM('draft', 'submitted', 'under_review', 'published', 'rejected'),
+      defaultValue: 'draft'
+    },
+    rejection_reason: DataTypes.TEXT,
+    submitted_at: DataTypes.DATE,
+    reviewed_at: DataTypes.DATE,
+    reviewed_by: DataTypes.STRING
+  },
+    {
+      sequelize,
+      modelName: 'Listing',
+    });
   return Listing;
 };

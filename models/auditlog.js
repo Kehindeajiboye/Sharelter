@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   AuditLog.init({
-    audit_id: DataTypes.STRING,
+    audit_id: { type: DataTypes.STRING, primaryKey: true },
     admin_id: DataTypes.STRING,
     action_taken: DataTypes.STRING,
     description: DataTypes.STRING

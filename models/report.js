@@ -14,13 +14,13 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   Report.init({
-    report_id: DataTypes.STRING,
+    report_id: { type: DataTypes.STRING, primaryKey: true },
     reporter_id: DataTypes.STRING,
     reported_user_id: DataTypes.STRING,
     listing_id: DataTypes.STRING,
     description: DataTypes.STRING,
-    type: DataTypes.ENUM,
-    status: DataTypes.ENUM
+    type: DataTypes.ENUM('fraud', 'harassment', 'extortion', 'bad behaviour', 'other'),
+    status: DataTypes.ENUM('open', 'resolved', 'dismissed')
   }, {
     sequelize,
     modelName: 'Report',

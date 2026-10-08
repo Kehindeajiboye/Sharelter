@@ -31,7 +31,7 @@ const options = {
     },
   },
   servers: [{ url: `http://localhost:${PORT}` }],
-  apis: ['./src/routes*.js'], // files containing annotations as above
+  apis: ['./src/routes/*.js'], // files containing annotations as above
 };
 const specs = swaggerJsdoc(options);
 
@@ -40,6 +40,8 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
 app.get("/", (req, res) => {
   res.send("WELCOME TO SHARELTER");
 });
+
+app.use("/api/listings", require("./src/routes/listingRoutes"));
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

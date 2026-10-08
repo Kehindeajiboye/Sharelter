@@ -1,6 +1,6 @@
 const { v4: uuidv4 } = require('uuid');
 const { Listing } = require('../../models');
-const { createListingSchema, updateListingSchema } = require('../validations/listingValidation');
+const { createListingSchema, updateListingSchema, submitListingSchema } = require('../validations/listingValidation');
 const { LISTING_STATUS, EDITABLE_STATUSES } = require('../constants/listing');
 
 const validationError = (res, error) => {
@@ -10,8 +10,7 @@ const validationError = (res, error) => {
     });
 }
 
-// Loads a listing owned by the logged-in user.
-// Someone else's listing gets the same 404 as a missing one, so its existence isn't revealed.
+
 const findOwnListing = async (req, res) => {
     const listing = await Listing.findByPk(req.params.listing_id);
     if (!listing || listing.user_id !== req.user.user_id) {
@@ -73,7 +72,7 @@ const updateListing = async (req, res) => {
     const listing = await findOwnListing(req, res);
     if (!listing) return;
 
-    // A published listing can only have its availability toggled (e.g. marked as rented)
+
     const onlyAvailability = Object.keys(value).every(key => key === 'listing_status');
     if (listing.status === LISTING_STATUS.PUBLISHED && onlyAvailability) {
         await listing.update(value);
@@ -90,7 +89,7 @@ const updateListing = async (req, res) => {
         });
     }
 
-    // Editing a rejected listing puts it back to draft so it must be resubmitted
+
     await listing.update({ ...value, status: LISTING_STATUS.DRAFT });
 
     return res.status(200).json({
@@ -118,9 +117,42 @@ const deleteListing = async (req, res) => {
     });
 }
 
+const submitListing = async (req, res) => {
+    const listing = await findOwnListing(req, res);
+    if (!listing) return;
+
+    if (!EDITABLE_STATUSES.includes(listing.status)) {
+        return res.status(409).json({
+            status: "error",
+            message: `Listing is already ${listing.status}`
+        });
+    }
+
+
+    const filledFields = Object.fromEntries(
+        Object.entries(listing.get({ plain: true })).filter(([, value]) => value !== null)
+    );
+    const { error } = submitListingSchema.validate(filledFields, { abortEarly: false, allowUnknown: true });
+    if (error) {
+        return validationError(res, error);
+    }
+
+    await listing.update({
+        status: LISTING_STATUS.SUBMITTED,
+        submitted_at: new Date(),
+        rejection_reason: null
+    });
+
+    return res.status(200).json({
+        status: "success",
+        data: listing
+    });
+}
+
 module.exports = {
     createListing,
     getMyListings,
     updateListing,
-    deleteListing
+    deleteListing,
+    submitListing
 }

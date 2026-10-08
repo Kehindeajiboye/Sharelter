@@ -1,7 +1,6 @@
 const Joi = require('joi');
 
-// Every field is optional while the listing is a draft.
-// Required fields are checked when the listing is submitted (Step 6).
+
 const listingFields = {
     title: Joi.string().trim().min(5).max(150).messages({
         'string.min': 'Title must be at least 5 characters long',
@@ -39,7 +38,22 @@ const updateListingSchema = Joi.object(listingFields).min(1).messages({
     'object.min': 'Provide at least one field to update'
 });
 
+
+const SUBMIT_REQUIRED_FIELDS = ['title', 'description', 'price', 'location', 'listing_type', 'listing_image_main'];
+
+const submitListingSchema = createListingSchema.fork(SUBMIT_REQUIRED_FIELDS, field => field.required());
+
+const rejectListingSchema = Joi.object({
+    reason: Joi.string().trim().min(10).max(1000).required().messages({
+        'string.min': 'Rejection reason must be at least 10 characters long',
+        'string.empty': 'Rejection reason is required',
+        'any.required': 'Rejection reason is required'
+    })
+});
+
 module.exports = {
     createListingSchema,
-    updateListingSchema
+    updateListingSchema,
+    submitListingSchema,
+    rejectListingSchema
 }

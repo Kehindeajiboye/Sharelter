@@ -7,7 +7,8 @@ const {
     createListing,
     getMyListings,
     updateListing,
-    deleteListing
+    deleteListing,
+    submitListing
 } = require('../controllers/listingController');
 
 const router = express.Router();
@@ -70,5 +71,24 @@ router.get('/mine', authenticate, authorize(...LISTER_ROLES), getMyListings);
  */
 router.patch('/:listing_id', authenticate, authorize(...LISTER_ROLES), updateListing);
 router.delete('/:listing_id', authenticate, authorize(...LISTER_ROLES), deleteListing);
+
+/**
+ * @swagger
+ * /api/listings/{listing_id}/submit:
+ *   post:
+ *     summary: Submit your draft or rejected listing for admin review
+ *     tags: [Listings]
+ *     parameters:
+ *       - in: path
+ *         name: listing_id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200: { description: Submitted }
+ *       400: { description: Required fields missing }
+ *       404: { description: Not found or not yours }
+ *       409: { description: Already submitted, under review or published }
+ */
+router.post('/:listing_id/submit', authenticate, authorize(...LISTER_ROLES), submitListing);
 
 module.exports = router;

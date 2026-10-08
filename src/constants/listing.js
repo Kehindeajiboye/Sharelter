@@ -8,7 +8,7 @@ const LISTING_STATUS = {
     REJECTED: 'rejected'
 };
 
-// Owners can only edit or delete a listing in these states
+
 const EDITABLE_STATUSES = [LISTING_STATUS.DRAFT, LISTING_STATUS.REJECTED];
 
 module.exports = {

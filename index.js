@@ -43,6 +43,8 @@ app.get("/", (req, res) => {
 
 app.use("/api/listings", require("./src/routes/listingRoutes"));
 
+app.use("/api/admin/listings", require("./src/routes/adminListingRoutes"));
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

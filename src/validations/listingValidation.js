@@ -51,9 +51,29 @@ const rejectListingSchema = Joi.object({
     })
 });
 
+const searchListingsSchema = Joi.object({
+    q: Joi.string().trim().max(100),
+    location: Joi.string().trim().max(255),
+    listing_type: Joi.string().valid('apartment', 'hostel'),
+    min_price: Joi.number().min(0),
+    max_price: Joi.number().min(0).when('min_price', {
+        is: Joi.exist(),
+        then: Joi.number().min(Joi.ref('min_price'))
+    }).messages({
+        'number.min': 'max_price must be greater than or equal to min_price'
+    }),
+    bedrooms: Joi.number().integer().min(0).max(50),
+    flatmate: Joi.string().valid('male', 'female', 'any'),
+    size: Joi.string().valid('moderate', 'large'),
+    sort: Joi.string().valid('newest', 'price_asc', 'price_desc').default('newest'),
+    page: Joi.number().integer().min(1).default(1),
+    limit: Joi.number().integer().min(1).max(50).default(12)
+});
+
 module.exports = {
     createListingSchema,
     updateListingSchema,
     submitListingSchema,
-    rejectListingSchema
+    rejectListingSchema,
+    searchListingsSchema
 }

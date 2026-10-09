@@ -8,10 +8,36 @@ const {
     getMyListings,
     updateListing,
     deleteListing,
-    submitListing
+    submitListing,
+    getListings,
+    getListingById
 } = require('../controllers/listingController');
 
 const router = express.Router();
+
+/**
+ * @swagger
+ * /api/listings:
+ *   get:
+ *     summary: Public feed and search of published, available listings
+ *     tags: [Listings]
+ *     parameters:
+ *       - { in: query, name: q, schema: { type: string }, description: Keyword in title, description or location }
+ *       - { in: query, name: location, schema: { type: string } }
+ *       - { in: query, name: min_price, schema: { type: number } }
+ *       - { in: query, name: max_price, schema: { type: number } }
+ *       - { in: query, name: listing_type, schema: { type: string, enum: [apartment, hostel] } }
+ *       - { in: query, name: bedrooms, schema: { type: integer }, description: Minimum number of bedrooms }
+ *       - { in: query, name: flatmate, schema: { type: string, enum: [male, female, any] } }
+ *       - { in: query, name: size, schema: { type: string, enum: [moderate, large] } }
+ *       - { in: query, name: sort, schema: { type: string, enum: [newest, price_asc, price_desc], default: newest } }
+ *       - { in: query, name: page, schema: { type: integer, default: 1 } }
+ *       - { in: query, name: limit, schema: { type: integer, default: 12, maximum: 50 } }
+ *     responses:
+ *       200: { description: Listing cards and pagination info (empty list when nothing matches) }
+ *       400: { description: Invalid filter }
+ */
+router.get('/', getListings);
 
 /**
  * @swagger
@@ -40,6 +66,20 @@ router.post('/', authenticate, authorize(...LISTER_ROLES), createListing);
  *       200: { description: Listings }
  */
 router.get('/mine', authenticate, authorize(...LISTER_ROLES), getMyListings);
+
+/**
+ * @swagger
+ * /api/listings/{listing_id}:
+ *   get:
+ *     summary: Public details of a published listing, with the owner's public profile
+ *     tags: [Listings]
+ *     parameters:
+ *       - { in: path, name: listing_id, required: true, schema: { type: string } }
+ *     responses:
+ *       200: { description: Listing details }
+ *       404: { description: Not found or not published }
+ */
+router.get('/:listing_id', getListingById);
 
 /**
  * @swagger

@@ -9,7 +9,8 @@ module.exports = {
     });
   },
 
-  async down(queryInterface, Sequelize) {
+    async down(queryInterface, Sequelize) {
+    await queryInterface.addIndex('SavedListings', ['user_id'], { name: 'saved_listings_user_id' });
     await queryInterface.removeConstraint('SavedListings', 'saved_listings_user_listing_unique');
   }
 };

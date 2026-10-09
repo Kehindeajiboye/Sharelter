@@ -1,5 +1,5 @@
 const express = require('express');
-// Remeber to swap to the real authenticate middleware once it's implemented
+// TODO(auth): swap to the real authenticate middleware once it's implemented
 const { devAuthenticate: authenticate } = require('../middleware/devAuthenticate');
 const { authorize } = require('../middleware/authorization');
 const {

@@ -7,14 +7,9 @@ const {
     submitListingSchema,
     searchListingsSchema
 } = require('../validations/listingValidation');
-const { LISTING_STATUS, EDITABLE_STATUSES } = require('../constants/listing');
+const { LISTING_STATUS, EDITABLE_STATUSES, CARD_ATTRIBUTES } = require('../constants/listing');
 
 
-const CARD_ATTRIBUTES = [
-    'listing_id', 'title', 'price', 'location', 'listing_type', 'listing_image_main',
-    'bedroom', 'kitchen', 'flatmate', 'size', 'listing_status',
-    ['reviewed_at', 'published_at']
-];
 
 const HIDDEN_FIELDS = ['id', 'rejection_reason', 'reviewed_by', 'reviewed_at', 'submitted_at', 'verification_status'];
 

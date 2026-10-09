@@ -10,7 +10,7 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      // define association here
+      SavedListing.belongsTo(models.Listing, { foreignKey: 'listing_id', targetKey: 'listing_id', as: 'listing' });
     }
   }
   SavedListing.init({

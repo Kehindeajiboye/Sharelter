@@ -2,7 +2,7 @@ const express = require('express');
 
 const { devAuthenticate: authenticate } = require('../middleware/devAuthenticate');
 const { authorize } = require('../middleware/authorization');
-const { LISTER_ROLES } = require('../constants/listing');
+const { LISTER_ROLES, SAVER_ROLES } = require('../constants/listing');
 const {
     createListing,
     getMyListings,
@@ -12,6 +12,11 @@ const {
     getListings,
     getListingById
 } = require('../controllers/listingController');
+const {
+    saveListing,
+    unsaveListing,
+    getSavedListings
+} = require('../controllers/savedListingController');
 
 const router = express.Router();
 
@@ -66,6 +71,18 @@ router.post('/', authenticate, authorize(...LISTER_ROLES), createListing);
  *       200: { description: Listings }
  */
 router.get('/mine', authenticate, authorize(...LISTER_ROLES), getMyListings);
+
+/**
+ * @swagger
+ * /api/listings/saved:
+ *   get:
+ *     summary: The logged-in tenant's saved listings (most recently saved first)
+ *     tags: [Saved Listings]
+ *     responses:
+ *       200: { description: Saved listing cards with saved_at }
+ *       403: { description: Not a tenant }
+ */
+router.get('/saved', authenticate, authorize(...SAVER_ROLES), getSavedListings);
 
 /**
  * @swagger
@@ -130,5 +147,28 @@ router.delete('/:listing_id', authenticate, authorize(...LISTER_ROLES), deleteLi
  *       409: { description: Already submitted, under review or published }
  */
 router.post('/:listing_id/submit', authenticate, authorize(...LISTER_ROLES), submitListing);
+
+/**
+ * @swagger
+ * /api/listings/{listing_id}/save:
+ *   post:
+ *     summary: Save a published listing
+ *     tags: [Saved Listings]
+ *     parameters:
+ *       - { in: path, name: listing_id, required: true, schema: { type: string } }
+ *     responses:
+ *       201: { description: Saved }
+ *       200: { description: Already saved }
+ *       404: { description: Not found or not published }
+ *   delete:
+ *     summary: Remove a listing from saved
+ *     tags: [Saved Listings]
+ *     parameters:
+ *       - { in: path, name: listing_id, required: true, schema: { type: string } }
+ *     responses:
+ *       200: { description: Removed (or was not saved) }
+ */
+router.post('/:listing_id/save', authenticate, authorize(...SAVER_ROLES), saveListing);
+router.delete('/:listing_id/save', authenticate, authorize(...SAVER_ROLES), unsaveListing);
 
 module.exports = router;

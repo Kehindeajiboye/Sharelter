@@ -10,27 +10,37 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      // define association here
+      Listing.belongsTo(models.User, { foreignKey: 'user_id', targetKey: 'user_id', as: 'owner' });
     }
   }
   Listing.init({
-    listing_id: DataTypes.STRING,
+    listing_id: { type: DataTypes.STRING, primaryKey: true },
     user_id: DataTypes.STRING,
-    price: DataTypes.DECIMAL,
+    price: DataTypes.DECIMAL(12, 2),
     location: DataTypes.STRING,
-    description: DataTypes.STRING,
-    listing_type: DataTypes.ENUM,
+    description: DataTypes.TEXT,
+    listing_type: DataTypes.ENUM('apartment', 'hostel'),
     listing_image_main: DataTypes.STRING,
     bedroom: DataTypes.INTEGER,
     kitchen: DataTypes.INTEGER,
     listing_images: DataTypes.JSON,
-    flatmate: DataTypes.ENUM,
-    size: DataTypes.ENUM,
-    verification_status: DataTypes.ENUM,
-    listing_status: DataTypes.ENUM
-  }, {
-    sequelize,
-    modelName: 'Listing',
-  });
+    flatmate: DataTypes.ENUM('male', 'female', 'any'),
+    size: DataTypes.ENUM('moderate', 'large'),
+    verification_status: DataTypes.ENUM('pending', 'verified'),
+    listing_status: DataTypes.ENUM('available', 'not available'),
+    title: DataTypes.STRING,
+    status: {
+      type: DataTypes.ENUM('draft', 'submitted', 'under_review', 'published', 'rejected'),
+      defaultValue: 'draft'
+    },
+    rejection_reason: DataTypes.TEXT,
+    submitted_at: DataTypes.DATE,
+    reviewed_at: DataTypes.DATE,
+    reviewed_by: DataTypes.STRING
+  },
+    {
+      sequelize,
+      modelName: 'Listing',
+    });
   return Listing;
 };

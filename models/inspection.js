@@ -14,12 +14,12 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   Inspection.init({
-    inspection_id: DataTypes.STRING,
+    inspection_id: { type: DataTypes.STRING, primaryKey: true },
     user_id: DataTypes.STRING,
     seller_id: DataTypes.STRING,
     scheduled_date: DataTypes.DATE,
     scheduled_time: DataTypes.TIME,
-    status: DataTypes.ENUM
+    status: DataTypes.ENUM('pending', 'approved', 'rejected')
   }, {
     sequelize,
     modelName: 'Inspection',

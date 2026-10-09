@@ -29,6 +29,10 @@ const signupSchema = Joi.object({
         'string.pattern.base': 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (!@$%&*)',
         'string.min': 'Password must be at least 8 characters long',
         'string.empty': 'Password is required',
+    }),
+    role: Joi.string().valid("tenant", "landlord", "agent").required().messages({
+        'string.valid': 'Role must be either "tenant", "landlord", or "agent"',
+        'any.required': 'Role is required'
     })
 })
 

@@ -55,7 +55,14 @@ const createNewUser = async (req, res) => {
             code: otp,
             expire_at: otpExpiry
         })
-        
+
+        const payload = {
+            firstName: newUser.first_name,
+            code: otp
+        }
+
+        await sendEmail(newUser.email, "Sharelter Verification Code", payload, "verificationCode");
+
         return res.status(201).json({
             status: true,
             message: "Check your email for verification code",
@@ -66,4 +73,11 @@ const createNewUser = async (req, res) => {
             message: error.message || "Server error"
         })
     }
+}
+
+
+
+
+module.exports = {
+    createNewUser
 }

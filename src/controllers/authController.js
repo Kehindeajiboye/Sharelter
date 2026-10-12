@@ -1,5 +1,6 @@
 const { Op } = require("sequelize");
 const bcrypt = require("bcryptjs")
+const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
 const { User, OTP } = require("../../models");
 const { signupSchema } = require("../validations/authValidation");
@@ -171,8 +172,60 @@ const resendVerificationCode = async (req, res) => {
     }
 }
 
+const loginUser = async (req, res) => {
+    const { value, error } = loginSchema.validate(req.body, { abortEarly: false });
+
+    if (error) {
+        return res.status(400).json({
+            status: false,
+            message: error.details.map(detail => detail.message)
+        });
+    }
+
+    const { email, password } = value;
+    const user = await User.findOne({ where: { email } });
+
+    if (!user) {
+        return res.status(404).json({
+            status: false,
+            message: "Invalid login credentials"
+        });
+    }
+
+    if (user.is_active === false) {
+        return res.status(403).json({
+            status: false,
+            message: "Invalid login credentials"
+        });
+    }
+
+    if (user.verification_status !== "verified") {
+        return res.status(403).json({
+            status: false,
+            message: "Invalid login credentials"
+        });
+    }
+
+    const isPasswordValid = bcrypt.compareSync(password, user.password_hash);
+
+    if (!isPasswordValid) {
+        return res.status(401).json({
+            status: false,
+            message: "Invalid login credentials"
+        });
+    }
+
+    const token = jwt.sign({ user_id: user.user_id, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    res.setHeader('Authorization', token);
+    return res.status(200).json({
+        status: true,
+        message: "Login successful",
+    });
+}
+
 module.exports = {
     createNewUser,
     verifyUser,
-    resendVerificationCode
+    resendVerificationCode,
+    loginUser
 }

@@ -128,10 +128,51 @@ const verifyUser = async (req, res) => {
     }
 }
 
+const resendVerificationCode = async (req, res) => {
+    const { email } = req.params
 
+    try {
+        const user = await User.findOne({ where: { email } })
 
+        if (!user) {
+            return res.status(404).json({
+                status: false,
+                message: "User not found"
+            })
+        }
+
+        await OTP.destroy({ where: { user_id: user.user_id } })
+
+        const otp = generateOTP()
+        const otpExpiry = expiredOTP()
+
+        await OTP.create({
+            user_id: user.user_id,
+            code: otp,
+            expire_at: otpExpiry
+        })
+
+        const payload = {
+            firstName: user.first_name,
+            code: otp
+        }
+
+        await sendEmail(user.email, "Sharelter Verification Code", payload, "verificationCode")
+
+        return res.status(200).json({
+            status: true,
+            message: "Verification code resent successfully"
+        })
+    } catch (error) {
+        return res.status(500).json({
+            status: false,
+            message: error.message || "Server error"
+        })
+    }
+}
 
 module.exports = {
     createNewUser,
-    verifyUser
+    verifyUser,
+    resendVerificationCode
 }

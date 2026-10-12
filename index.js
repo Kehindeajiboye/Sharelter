@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const swaggerUi = require("swagger-ui-express");
 const swaggerJsdoc = require("swagger-jsdoc");
+const authRoute = require("./src/routes/authRoute");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -44,3 +45,6 @@ app.get("/", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+
+app.use('/auth', authRoute);

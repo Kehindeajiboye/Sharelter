@@ -62,7 +62,7 @@ module.exports = {
         allowNull: true
       },
       verification_status: {
-        type: Sequelize.ENUM("pending","verified"),
+        type: Sequelize.ENUM("pending","verified", "draft", "rejected"),
         defaultValue: "pending"
       },
       listing_status: {

@@ -49,7 +49,29 @@ const loginSchema = Joi.object({
     })
 })
 
+const startForgetPasswordSchema = Joi.object({
+    email: Joi.string()
+        .email({ minDomainSegments: 2, tlds: { allow: ["com", "net", "ng"] } })
+        .required()
+        .messages({
+            "string.empty": "email cannot be an empty field",
+            "string.email": "email must be a valid email",
+            "any.required": "email is required field",
+        }),
+});
+
+const completeForgetPasswordSchema = Joi.object({
+  new_password: Joi.string().alphanum().min(8).required().messages({
+    "string.alphanum": "password must contain only numbers and letters",
+    "string.empty": "password cannot be an empty field",
+    "string.min": "password should be a minimum length of 8",
+    "any.required": "password is required field",
+  }),
+});
+
 module.exports = {
     signupSchema,
-    loginSchema
+    loginSchema,
+    startForgetPasswordSchema,
+    completeForgetPasswordSchema
 }

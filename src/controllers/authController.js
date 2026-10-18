@@ -223,6 +223,54 @@ const loginUser = async (req, res) => {
     });
 }
 
+const startForgetPassword = async (req, res) => {
+    const { value, error } = startForgetPasswordSchema.validate(req.body, { abortEarly: false });
+
+    if (error) {
+        return res.status(400).json({
+            status: false,
+            message: error.details.map(detail => detail.message)
+        });
+    }
+
+    try {
+        const user = await User.findOne({ where: { email: value.email } });
+
+        if (!user) {
+            return res.status(404).json({
+                status: false,
+                message: "User not found"
+            });
+        }
+
+        const otp = generateOTP();
+        const otpExpiry = expiredOTP();
+        await OTP.destroy({ where: { user_id: user.user_id } });
+
+        await OTP.create({
+            user_id: user.user_id,
+            code: otp,
+            expire_at: otpExpiry
+        });
+
+        const payload = {
+            firstName: user.first_name,
+            code: otp
+        }
+
+        await sendEmail(user.email, "Sharelter Password Reset Code", payload, "forgetPassword");
+        return res.status(200).json({
+            status: true,
+            message: "Password reset code sent successfully"
+        });
+    } catch (error) {
+        return res.status(500).json({
+            status: false,
+            message: error.message || "Server error"
+        })
+    }
+}
+
 module.exports = {
     createNewUser,
     verifyUser,

@@ -61,13 +61,24 @@ const startForgetPasswordSchema = Joi.object({
 });
 
 const completeForgetPasswordSchema = Joi.object({
-  new_password: Joi.string().alphanum().min(8).required().messages({
-    "string.alphanum": "password must contain only numbers and letters",
-    "string.empty": "password cannot be an empty field",
-    "string.min": "password should be a minimum length of 8",
-    "any.required": "password is required field",
-  }),
-});
+    code: Joi.string().length(6).required().messages({
+        'string.length': 'Verification code must be 6 characters long',
+        'string.empty': 'Verification code is required',
+        'any.required': 'Verification code is required'
+    }),
+    new_password: Joi.string().pattern(new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@$%&*])")).min(8).required().messages({
+        'string.pattern.base': 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (!@$%&*)',
+        'string.min': 'Password must be at least 8 characters long',
+        'string.empty': 'Password is required',
+    }),
+    confirm_password: Joi.string().valid(Joi.ref('new_password')).required().messages({
+        'any.only': 'Confirm password must match new password',
+        'string.empty': 'Confirm password is required',
+        'any.required': 'Confirm password is required'
+    })
+})
+
+
 
 module.exports = {
     signupSchema,

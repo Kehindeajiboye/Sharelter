@@ -69,6 +69,11 @@ module.exports = {
         type: Sequelize.ENUM("available", "not available"),
         defaultValue: "not available"
       },
+      reason_for_rejection: {
+        type: Sequelize.STRING,
+        allowNull: true,
+        defaultValue: null
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

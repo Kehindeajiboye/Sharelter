@@ -1,4 +1,5 @@
-const { User, Listing } = require("../../models");
+const { User, Listing, AuditLog } = require("../../models");
+const { v4: uuidv4 } = require("uuid");
 
 
 const getAllUsers = async (req, res) => {
@@ -85,6 +86,14 @@ const approveListing = async (req, res) => {
         }
         listing.verification_status = "verified"
         await listing.save()
+
+        const audit_id = uuidv4(); // Generate a unique audit_id
+        await AuditLog.create({
+            audit_id,
+            admin_id: req.user.user_id, // Assuming you have the admin's user_id in req.user
+            action_taken: "Approved Listing",
+            description: `Listing with ID ${listing_id} has been approved by admin ${req.user.user_id}`
+        })
 
         res.status(200).json({
             status: true,

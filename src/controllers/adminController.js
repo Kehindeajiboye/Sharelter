@@ -69,12 +69,13 @@ const getPendingLists = async (req, res) => {
     }
 }
 
+
 const approveListing = async (req, res) => {
     const { listing_id } = req.params
     const t = await sequelize.transaction(); // Start a transaction
     try {
         const listing = await Listing.findByPk(listing_id, { transaction: t })
-        const user = await User.findByPk(listing.user_id, { transaction: t })
+
         if (!listing) {
             return res.status(404).json({
                 status: false,
@@ -87,6 +88,9 @@ const approveListing = async (req, res) => {
                 message: "Listing is already verified"
             })
         }
+
+        const user = await User.findByPk(listing.user_id, { transaction: t })
+
         listing.verification_status = "verified"
         await listing.save({ transaction: t })
 
@@ -129,13 +133,15 @@ const rejectListing = async (req, res) => {
 
     try {
         const listing = await Listing.findByPk(listing_id, { transaction: t })
-        const user = await User.findByPk(listing.user_id, { transaction: t })
+        
         if (!listing) {
             return res.status(404).json({
                 status: false,
                 message: "Listing not found"
             })
         }
+
+        const user = await User.findByPk(listing.user_id, { transaction: t })
 
         if (!reason_for_rejection) {
             return res.status(400).json({
@@ -197,7 +203,69 @@ const rejectListing = async (req, res) => {
 
 
 const suspendListing = async (req, res) => {
-    
+    const { listing_id } = req.params
+    const t = await sequelize.transaction();
+
+    try {
+        const listing = await Listing.findByPk(listing_id, { transaction: t })
+
+        if (!listing) {
+            return res.status(404).json({
+                status: false,
+                message: "Listing not found"
+            })
+        }
+
+        const user = await User.findByPk(listing.user_id, { transaction: t })
+
+        if (!listing.suspended) {
+            return res.status(500).json({
+                status: false,
+                message: "Listing is already suspended"
+            })
+        }
+
+        if (listing.verification_status === "rejected") {
+            return res.status(400).json({
+                status: false,
+                message: "Listing is already rejected"
+            })
+        }
+
+        listing.suspended = false
+        await listing.save({ transaction: t })
+
+        const audit_id = uuidv4(); // Generate a unique audit_id
+
+        await AuditLog.create({
+            audit_id,
+            admin_id: req.user.user_id,
+            action_taken: "Suspended Listing",
+            description: `Listing with ID ${listing_id} has been suspended by admin ${req.user.user_id}`
+        }, { transaction: t })
+
+        await t.commit(); // Commit the transaction
+
+        const payload = {
+            firstName: user.first_name
+        }
+
+        await sendEmail(user.email, "Sharelter", payload, "listingSuspended")
+
+        res.status(200).json({
+            status: true,
+            message: "Listing suspended successfully",
+            data: listing
+        })
+
+
+    } catch (error) {
+        await t.rollback(); // Rollback the transaction in case of error
+        res.status(500).json({
+            status: false,
+            message: "Error suspending listing"
+        })
+    }
 }
 
 
@@ -206,5 +274,6 @@ module.exports = {
     getAllListings,
     getPendingLists,
     rejectListing,
-    approveListing
+    approveListing,
+    suspendListing
 }

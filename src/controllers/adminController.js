@@ -101,6 +101,12 @@ const approveListing = async (req, res) => {
 
         await t.commit(); // Commit the transaction
 
+        const payload = {
+            firstName: user.first_name
+        }
+
+        await sendEmail(user.email, "Sharelter", payload, "listingApproved")
+
         res.status(200).json({
             status: true,
             message: "Listing approved successfully",
@@ -121,7 +127,7 @@ const rejectListing = async (req, res) => {
     const { reason_for_rejection } = req.body
     const t = await sequelize.transaction();
 
-    try{
+    try {
         const listing = await Listing.findByPk(listing_id, { transaction: t })
         const user = await User.findByPk(listing.user_id, { transaction: t })
         if (!listing) {
@@ -130,7 +136,7 @@ const rejectListing = async (req, res) => {
                 message: "Listing not found"
             })
         }
-        
+
         if (!reason_for_rejection) {
             return res.status(400).json({
                 status: false,
@@ -167,7 +173,7 @@ const rejectListing = async (req, res) => {
         await t.commit(); // Commit the transaction
 
         const payload = {
-            firstName: user.firstName,
+            firstName: user.first_name,
             verification_status: listing.verification_status,
             reason_for_rejection: listing.reason_for_rejection
         }
@@ -187,6 +193,13 @@ const rejectListing = async (req, res) => {
         })
     }
 }
+
+
+
+const suspendListing = async (req, res) => {
+    
+}
+
 
 module.exports = {
     getAllUsers,

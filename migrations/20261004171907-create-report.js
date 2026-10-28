@@ -37,6 +37,10 @@ module.exports = {
           key: 'listing_id'
         }
       },
+      reported:{
+        type: Sequelize.ENUM ("listing", "lister"),
+        allowNull: false
+      },
       description: {
         type: Sequelize.STRING,
         allowNull: true

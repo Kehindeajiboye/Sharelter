@@ -133,7 +133,7 @@ const rejectListing = async (req, res) => {
 
     try {
         const listing = await Listing.findByPk(listing_id, { transaction: t })
-        
+
         if (!listing) {
             return res.status(404).json({
                 status: false,
@@ -268,6 +268,66 @@ const suspendListing = async (req, res) => {
     }
 }
 
+const unsuspendListing = async (req, res) => {
+    const { listing_id } = req.params
+    const t = await sequelize.transaction();
+
+    try {
+        const listing = await Listing.findByPk(listing_id, { transaction: t })
+
+        if (!listing) {
+            return res.status(404).json({
+                status: false,
+                message: "Listing not found"
+            })
+        }
+
+        const user = await User.findByPk(listing.user_id, { transaction: t })
+
+        if (listing.suspended) {
+            return res.status(500).json({
+                status: false,
+                message: "Listing is already unsuspended"
+            })
+        }
+
+        listing.suspended = true
+        await listing.save({ transaction: t })
+
+        const audit_id = uuidv4(); // Generate a unique audit_id
+
+        await AuditLog.create({
+            audit_id,
+            admin_id: req.user.user_id,
+            action_taken: "Unsuspended Listing",
+            description: `Listing with ID ${listing_id} has been unsuspended by admin ${req.user.user_id}`
+        }, { transaction: t })
+
+        await t.commit(); // Commit the transaction
+
+        const payload = {
+            firstName: user.first_name
+        }
+
+        await sendEmail(user.email, "Sharelter", payload, "listingUnsuspended")
+
+        res.status(200).json({
+            status: true,
+            message: "Listing unsuspended successfully",
+            data: listing
+        })
+
+
+
+    } catch (error) {
+        await t.rollback(); // Rollback the transaction in case of error
+        res.status(500).json({
+            status: false,
+            message: "Error suspending listing"
+        })
+    }
+}
+
 
 module.exports = {
     getAllUsers,
@@ -275,5 +335,6 @@ module.exports = {
     getPendingLists,
     rejectListing,
     approveListing,
-    suspendListing
+    suspendListing,
+    unsuspendListing
 }

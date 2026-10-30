@@ -70,6 +70,7 @@ const getPendingLists = async (req, res) => {
 }
 
 
+
 const approveListing = async (req, res) => {
     const { listing_id } = req.params
     const t = await sequelize.transaction(); // Start a transaction
@@ -327,6 +328,8 @@ const unsuspendListing = async (req, res) => {
         })
     }
 }
+
+
 
 
 module.exports = {

@@ -19,15 +19,16 @@ module.exports = (sequelize, DataTypes) => {
     price: DataTypes.DECIMAL,
     location: DataTypes.STRING,
     description: DataTypes.STRING,
-    listing_type: DataTypes.ENUM,
+    listing_type: DataTypes.ENUM("apartment", "hostel"),
     listing_image_main: DataTypes.STRING,
     bedroom: DataTypes.INTEGER,
     kitchen: DataTypes.INTEGER,
     listing_images: DataTypes.JSON,
-    flatmate: DataTypes.ENUM,
-    size: DataTypes.ENUM,
-    verification_status: DataTypes.ENUM,
-    listing_status: DataTypes.ENUM
+    flatmate: DataTypes.ENUM("male", "female", "any"),
+    size: DataTypes.ENUM("moderate", "large"),
+    verification_status: DataTypes.ENUM("pending","verified", "draft", "rejected"),
+    listing_status: DataTypes.ENUM("available", "not available"),
+    reason_for_rejection: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'Listing',

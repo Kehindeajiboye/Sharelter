@@ -17,10 +17,11 @@ module.exports = (sequelize, DataTypes) => {
     report_id: DataTypes.STRING,
     reporter_id: DataTypes.STRING,
     reported_user_id: DataTypes.STRING,
+    reported: DataTypes.ENUM("listing", "lister"),
     listing_id: DataTypes.STRING,
     description: DataTypes.STRING,
-    type: DataTypes.ENUM,
-    status: DataTypes.ENUM
+    type: DataTypes.ENUM ("fraud", "harassment", "extortion", "bad behaviour", "other"),
+    status: DataTypes.ENUM ("open", "resolved", "dismissed")
   }, {
     sequelize,
     modelName: 'Report',

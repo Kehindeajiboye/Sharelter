@@ -23,6 +23,7 @@ module.exports = {
       },
       reported_user_id: {
         type: Sequelize.STRING,
+        allowNull: true,
         foreignKey: true,
         references: {
           model: 'Users',
@@ -31,6 +32,7 @@ module.exports = {
       },
       listing_id: {
         type: Sequelize.STRING,
+        allowNull: true,
         foreignKey: true,
         references: {
           model: 'Listings',

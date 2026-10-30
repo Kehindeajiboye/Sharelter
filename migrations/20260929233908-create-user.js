@@ -48,7 +48,7 @@ module.exports = {
         defaultValue: "pending"
       },
       profile_image_url: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING, 
         allowNull: true
       },
       is_active: {

@@ -69,6 +69,56 @@ const getPendingLists = async (req, res) => {
     }
 }
 
+// const getPendingReports = async (req, res) => {
+//     try {
+//         const reports = await Report.findAll({
+//             where: {
+//                 status: "pending"
+//             }
+//         })
+//         res.status(200).json({
+//             status: true,
+//             message: "Pending reports fetched successfully",
+//             data: reports
+//         })
+//     } catch (error) {
+//         res.status(500).json({
+//             status: false,
+//             message: "Error fetching pending reports"
+//         })
+//     }
+// }
+
+const getPendingReports = async (req, res) => {
+    try {
+        const page = Math.max(1, parseInt(req.query.page)) || 1; // Default to page 1 if not provided
+        const limit = Math.min(1, parseInt(req.query.limit)) || 10; // Default to 10 items per page if not provided
+
+        const offset = (page - 1) * limit;
+        const { count, rows: reports } = await Report.findAndCountAll({
+            where: {
+                status: "pending"
+            },
+            limit,
+            offset
+        });
+        res.status(200).json({
+            status: true,
+            message: "Pending reports fetched successfully",
+            data: reports,
+            pagination: {
+                page,
+                limit,
+                total: count
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: false,
+            message: "Error fetching pending reports"
+        });
+    }
+}
 
 
 const approveListing = async (req, res) => {
@@ -200,8 +250,6 @@ const rejectListing = async (req, res) => {
         })
     }
 }
-
-
 
 const suspendListing = async (req, res) => {
     const { listing_id } = req.params
@@ -339,5 +387,6 @@ module.exports = {
     rejectListing,
     approveListing,
     suspendListing,
-    unsuspendListing
+    unsuspendListing,
+    getPendingReports
 }

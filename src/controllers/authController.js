@@ -33,6 +33,19 @@ const createNewUser = async (req, res) => {
             })
         }
 
+        const checkIfPhoneExists = await User.findAll({
+            where: {
+                phone: value.phone
+            }
+        })
+
+        if (checkIfPhoneExists.length > 0) {
+            return res.status(400).json({
+                status: false,
+                message: "Phone number already exists"
+            })
+        }
+
         const salt = bcrypt.genSaltSync(10);
         const hash = bcrypt.hashSync(value.password, salt);
         const user_id = uuidv4();

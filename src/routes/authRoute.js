@@ -1,7 +1,7 @@
 const express = require('express');
 const { createNewUser, verifyUser, resendVerificationCode, loginUser, startForgetPassword, completeForgetPassword } = require('../controllers/authController');
 const router = express.Router();
-
+ 
 
 router.post('/signup', createNewUser);
 router.post('/verify/:email', verifyUser);

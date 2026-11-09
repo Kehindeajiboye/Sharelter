@@ -5,6 +5,8 @@ const { v4: uuidv4 } = require("uuid");
 const { User, OTP } = require("../../models");
 const { signupSchema, completeForgetPasswordSchema, startForgetPasswordSchema, loginSchema } = require("../validations/authValidation");
 const { generateOTP, expiredOTP, sendEmail } = require("../utils/utils");
+const cloudinary = require("../../config/cloudinary");
+// const cloudinary = require("../../config/cloudinary");
 
 const createNewUser = async (req, res) => {
     const { error, value } = signupSchema.validate(req.body, { abortEarly: false });
@@ -328,11 +330,13 @@ const completeForgetPassword = async (req, res) => {
     }
 }
 
+
+
 module.exports = {
-    createNewUser,
-    verifyUser,
-    resendVerificationCode,
-    loginUser,
-    startForgetPassword,
-    completeForgetPassword
-}
+            createNewUser,
+            verifyUser,
+            resendVerificationCode,
+            loginUser,
+            startForgetPassword,
+            completeForgetPassword
+        }

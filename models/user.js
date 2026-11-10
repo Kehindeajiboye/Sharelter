@@ -24,6 +24,7 @@ module.exports = (sequelize, DataTypes) => {
     role: DataTypes.ENUM("admin", "tenant", "landlord", "agent"),
     verification_status: DataTypes.ENUM("pending", "verified", "rejected"),
     profile_image_url: DataTypes.STRING,
+    profile_image_id: DataTypes.STRING,
     is_active: DataTypes.BOOLEAN
   }, {
     sequelize,

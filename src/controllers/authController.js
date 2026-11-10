@@ -6,7 +6,6 @@ const { User, OTP } = require("../../models");
 const { signupSchema, completeForgetPasswordSchema, startForgetPasswordSchema, loginSchema } = require("../validations/authValidation");
 const { generateOTP, expiredOTP, sendEmail } = require("../utils/utils");
 const cloudinary = require("../../config/cloudinary");
-// const cloudinary = require("../../config/cloudinary");
 
 const createNewUser = async (req, res) => {
     const { error, value } = signupSchema.validate(req.body, { abortEarly: false });
@@ -35,6 +34,53 @@ const createNewUser = async (req, res) => {
             })
         }
 
+        const checkIfPhoneExists = await User.findAll({
+            where: {
+                phone: value.phone
+            }
+        })
+
+        if (checkIfPhoneExists.length > 0) {
+            return res.status(400).json({
+                status: false,
+                message: "Phone number already exists"
+            })
+        }
+
+        let profilePictureUrl = null;
+        let profilePicturePublicId = null;
+
+        if (req.file) {
+
+            const imageBase64 = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
+
+            const result = await cloudinary.uploader.upload(
+                imageBase64,
+                {
+                    folder: "sharelter/profile_pictures",
+                    resource_type: "image"
+                }
+            );
+
+            console.log(`Uploaded: ${result.public_id}`);
+
+            const url = cloudinary.url(result.public_id, {
+                width: 400,
+                height: 400,
+                crop: "fill",
+                gravity: "auto",
+                fetch_format: "auto",
+                quality: "auto",
+                secure: true
+            });
+
+            console.log(`Optimized URL: ${url}`);
+
+            profilePictureUrl = url;
+            profilePicturePublicId = result.public_id;
+        }
+
+
         const salt = bcrypt.genSaltSync(10);
         const hash = bcrypt.hashSync(value.password, salt);
         const user_id = uuidv4();
@@ -47,7 +93,9 @@ const createNewUser = async (req, res) => {
             phone: value.phone,
             password_salt: salt,
             password_hash: hash,
-            role: value.role
+            role: value.role,
+            profile_image_id: profilePicturePublicId,
+            profile_image_url: profilePictureUrl
         })
 
         const otp = generateOTP();

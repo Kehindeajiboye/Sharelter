@@ -1,0 +1,88 @@
+const Joi = require('joi');
+
+const signupSchema = Joi.object({
+    first_name: Joi.string().min(3).max(100).required().messages({
+        'string.base': 'First name must be a string',
+        'string.empty': 'First name is required',
+        'string.min': 'First name must be at least 3 characters long',
+        'string.max': 'First name must be at most 100 characters long',
+        'any.required': 'First name is required'
+    }),
+    last_name: Joi.string().min(3).max(100).required().messages({
+        'string.base': 'Last name must be a string',
+        'string.empty': 'Last name is required',
+        'string.min': 'Last name must be at least 3 characters long',
+        'string.max': 'Last name must be at most 100 characters long',
+        'any.required': 'Last name is required'
+    }),
+    email: Joi.string().email({ minDomainSegments: 2, tlds: { allow: ["com", "net", "ng"] } }).required().messages({
+        "string.email": "Email must be a valid email address",
+        "string.empty": "Email is required",
+        "any.required": "Email is required"
+    }),
+    phone: Joi.string().max(15).required().messages({
+        'string.empty': 'Phone number is required',
+        'string.max': 'Phone number must be at most 15 characters long',
+        'any.required': 'Phone number is required'
+    }),
+    password: Joi.string().pattern(new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@$%&*])")).min(8).required().messages({
+        'string.pattern.base': 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (!@$%&*)',
+        'string.min': 'Password must be at least 8 characters long',
+        'string.empty': 'Password is required',
+    }),
+    role: Joi.string().valid("tenant", "landlord", "agent").required().messages({
+        'string.valid': 'Role must be either "tenant", "landlord", or "agent"',
+        'any.required': 'Role is required'
+    })
+})
+
+const loginSchema = Joi.object({
+    email: Joi.string().email({ minDomainSegments: 2, tlds: { allow: ["com", "net", "ng"] } }).required().messages({
+        "string.email": "Email must be a valid email address",
+        "string.empty": "Email is required",
+        "any.required": "Email is required"
+    }),
+    password: Joi.string().pattern(new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@$%&*])")).min(8).required().messages({
+        'string.pattern.base': 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (!@$%&*)',
+        'string.min': 'Password must be at least 8 characters long',
+        'string.empty': 'Password is required',
+    })
+})
+
+const startForgetPasswordSchema = Joi.object({
+    email: Joi.string()
+        .email({ minDomainSegments: 2, tlds: { allow: ["com", "net", "ng"] } })
+        .required()
+        .messages({
+            "string.empty": "email cannot be an empty field",
+            "string.email": "email must be a valid email",
+            "any.required": "email is required field",
+        }),
+});
+
+const completeForgetPasswordSchema = Joi.object({
+    code: Joi.string().length(6).required().messages({
+        'string.length': 'Verification code must be 6 characters long',
+        'string.empty': 'Verification code is required',
+        'any.required': 'Verification code is required'
+    }),
+    new_password: Joi.string().pattern(new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@$%&*])")).min(8).required().messages({
+        'string.pattern.base': 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (!@$%&*)',
+        'string.min': 'Password must be at least 8 characters long',
+        'string.empty': 'Password is required',
+    }),
+    confirm_password: Joi.string().valid(Joi.ref('new_password')).required().messages({
+        'any.only': 'Confirm password must match new password',
+        'string.empty': 'Confirm password is required',
+        'any.required': 'Confirm password is required'
+    })
+})
+
+
+
+module.exports = {
+    signupSchema,
+    loginSchema,
+    startForgetPasswordSchema,
+    completeForgetPasswordSchema
+}

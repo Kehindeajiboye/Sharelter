@@ -1,0 +1,388 @@
+const { Op } = require("sequelize");
+const bcrypt = require("bcryptjs")
+const jwt = require("jsonwebtoken");
+const { v4: uuidv4 } = require("uuid");
+const { User, OTP } = require("../../models");
+const { signupSchema, completeForgetPasswordSchema, startForgetPasswordSchema, loginSchema } = require("../validations/authValidation");
+const { generateOTP, expiredOTP, sendEmail } = require("../utils/utils");
+const cloudinary = require("../../config/cloudinary");
+
+const createNewUser = async (req, res) => {
+    const { error, value } = signupSchema.validate(req.body, { abortEarly: false });
+    console.log("Validation result:", { error, value });
+
+
+    if (error) {
+        return res.status(400).json({
+            status: "error",
+            message: error.details.map(detail => detail.message)
+        });
+    }
+
+
+    try {
+        const checkIfExists = await User.findAll({
+            where: {
+                email: value.email
+            }
+        })
+
+        if (checkIfExists.length > 0) {
+            return res.status(400).json({
+                status: false,
+                message: "User already exists"
+            })
+        }
+
+        const checkIfPhoneExists = await User.findAll({
+            where: {
+                phone: value.phone
+            }
+        })
+
+        if (checkIfPhoneExists.length > 0) {
+            return res.status(400).json({
+                status: false,
+                message: "Phone number already exists"
+            })
+        }
+
+        let profilePictureUrl = null;
+        let profilePicturePublicId = null;
+
+        if (req.file) {
+
+            const imageBase64 = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
+
+            const result = await cloudinary.uploader.upload(
+                imageBase64,
+                {
+                    folder: "sharelter/profile_pictures",
+                    resource_type: "image"
+                }
+            );
+
+            console.log(`Uploaded: ${result.public_id}`);
+
+            const url = cloudinary.url(result.public_id, {
+                width: 400,
+                height: 400,
+                crop: "fill",
+                gravity: "auto",
+                fetch_format: "auto",
+                quality: "auto",
+                secure: true
+            });
+
+            console.log(`Optimized URL: ${url}`);
+
+            profilePictureUrl = url;
+            profilePicturePublicId = result.public_id;
+        }
+
+
+        const salt = bcrypt.genSaltSync(10);
+        const hash = bcrypt.hashSync(value.password, salt);
+        const user_id = uuidv4();
+
+        const newUser = await User.create({
+            user_id,
+            first_name: value.first_name,
+            last_name: value.last_name,
+            email: value.email,
+            phone: value.phone,
+            password_salt: salt,
+            password_hash: hash,
+            role: value.role,
+            profile_image_id: profilePicturePublicId,
+            profile_image_url: profilePictureUrl
+        })
+
+        const otp = generateOTP();
+        const otpExpiry = expiredOTP();
+
+        await OTP.create({
+            user_id: newUser.user_id,
+            code: otp,
+            expire_at: otpExpiry
+        })
+
+        const payload = {
+            firstName: newUser.first_name,
+            code: otp
+        }
+
+        await sendEmail(newUser.email, "Sharelter Verification Code", payload, "verificationCode");
+
+        return res.status(201).json({
+            status: true,
+            message: "Check your email for verification code",
+        })
+    } catch (error) {
+        return res.status(500).json({
+            status: false,
+            message: error.message || "Server error"
+        })
+    }
+}
+
+const verifyUser = async (req, res) => {
+    const { email } = req.params
+    const { code } = req.body
+
+    try {
+        const user = await User.findOne({ where: { email } })
+
+        if (!user) {
+            return res.status(404).json({
+                status: false,
+                message: "User not found"
+            })
+        }
+
+        const otpRecord = await OTP.findOne({
+            where: {
+                user_id: user.user_id,
+                code
+            }
+        })
+
+        if (!otpRecord) {
+            return res.status(400).json({
+                status: false,
+                message: "Invalid verification code"
+            })
+        }
+
+        if (Date.now() > parseInt(otpRecord.expire_at)) {
+            return res.status(400).json({
+                status: false,
+                message: "Verification code has expired"
+            })
+        }
+
+        await OTP.destroy({ where: { user_id: user.user_id } })
+
+        await User.update({ verification_status: "verified" }, { where: { user_id: user.user_id } })
+        await User.update({ is_active: true }, { where: { user_id: user.user_id } })
+
+
+        return res.status(200).json({
+            status: true,
+            message: "User verified successfully"
+        })
+    } catch (error) {
+        return res.status(500).json({
+            status: false,
+            message: error.message || "Server error"
+        })
+    }
+}
+
+const resendVerificationCode = async (req, res) => {
+    const { email } = req.params
+
+    try {
+        const user = await User.findOne({ where: { email } })
+
+        if (!user) {
+            return res.status(404).json({
+                status: false,
+                message: "User not found"
+            })
+        }
+
+        await OTP.destroy({ where: { user_id: user.user_id } })
+
+        const otp = generateOTP()
+        const otpExpiry = expiredOTP()
+
+        await OTP.create({
+            user_id: user.user_id,
+            code: otp,
+            expire_at: otpExpiry
+        })
+
+        const payload = {
+            firstName: user.first_name,
+            code: otp
+        }
+
+        await sendEmail(user.email, "Sharelter Verification Code", payload, "verificationCode")
+
+        return res.status(200).json({
+            status: true,
+            message: "Verification code resent successfully"
+        })
+    } catch (error) {
+        return res.status(500).json({
+            status: false,
+            message: error.message || "Server error"
+        })
+    }
+}
+
+const loginUser = async (req, res) => {
+    const { value, error } = loginSchema.validate(req.body, { abortEarly: false });
+
+    if (error) {
+        return res.status(400).json({
+            status: false,
+            message: error.details.map(detail => detail.message)
+        });
+    }
+
+    const { email, password } = value;
+    const user = await User.findOne({ where: { email } });
+
+    if (!user) {
+        return res.status(404).json({
+            status: false,
+            message: "Invalid login credentials"
+        });
+    }
+
+    if (user.is_active === false) {
+        return res.status(403).json({
+            status: false,
+            message: "Invalid login credentials"
+        });
+    }
+
+    if (user.verification_status !== "verified") {
+        return res.status(403).json({
+            status: false,
+            message: "Invalid login credentials"
+        });
+    }
+
+    const isPasswordValid = bcrypt.compareSync(password, user.password_hash);
+
+    if (!isPasswordValid) {
+        return res.status(401).json({
+            status: false,
+            message: "Invalid login credentials"
+        });
+    }
+
+    const token = jwt.sign({ user_id: user.user_id, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    res.setHeader('Authorization', token);
+    return res.status(200).json({
+        status: true,
+        message: "Login successful",
+    });
+}
+
+const startForgetPassword = async (req, res) => {
+    const { value, error } = startForgetPasswordSchema.validate(req.body, { abortEarly: false });
+
+    if (error) {
+        return res.status(400).json({
+            status: false,
+            message: error.details.map(detail => detail.message)
+        });
+    }
+
+    try {
+        const user = await User.findOne({ where: { email: value.email } });
+
+        if (!user) {
+            return res.status(404).json({
+                status: false,
+                message: "User not found"
+            });
+        }
+
+        const otp = generateOTP();
+        const otpExpiry = expiredOTP();
+        await OTP.destroy({ where: { user_id: user.user_id } });
+
+        await OTP.create({
+            user_id: user.user_id,
+            code: otp,
+            expire_at: otpExpiry
+        });
+
+        const payload = {
+            firstName: user.first_name,
+            code: otp
+        }
+
+        await sendEmail(user.email, "Sharelter Password Reset Code", payload, "forgetPassword");
+        return res.status(200).json({
+            status: true,
+            message: "Password reset code sent successfully"
+        });
+    } catch (error) {
+        return res.status(500).json({
+            status: false,
+            message: error.message || "Server error"
+        })
+    }
+}
+
+const completeForgetPassword = async (req, res) => {
+    const { email } = req.params;
+    const { value, error } = completeForgetPasswordSchema.validate(req.body, { abortEarly: false });
+
+    if (error) {
+        return res.status(400).json({
+            status: false,
+            message: error.details.map(detail => detail.message)
+        });
+    }
+
+    try {
+        const user = await User.findOne({ where: { email } });
+
+        if (!user) {
+            return res.status(404).json({
+                status: false,
+                message: "User not found"
+            });
+        }
+        const otpRecord = await OTP.findOne({
+            where: {
+                user_id: user.user_id,
+                code: value.code
+            }
+        });
+
+        if (!otpRecord) {
+            return res.status(400).json({
+                status: false,
+                message: "Invalid verification code"
+            });
+        }
+
+        if (Date.now() > parseInt(otpRecord.expire_at)) {
+            return res.status(400).json({
+                status: false,
+                message: "Verification code has expired"
+            });
+        }
+        await OTP.destroy({ where: { user_id: user.user_id } });
+
+        const salt = bcrypt.genSaltSync(10);
+        const hash = bcrypt.hashSync(value.new_password, salt);
+        await User.update({ password: hash }, { where: { user_id: user.user_id } });
+        return res.status(200).json({
+            status: true,
+            message: "Password reset successfully"
+        });
+    } catch (error) {
+        return res.status(500).json({
+            status: false,
+            message: error.message || "Server error"
+        })
+    }
+}
+
+module.exports = {
+    createNewUser,
+    verifyUser,
+    resendVerificationCode,
+    loginUser,
+    startForgetPassword,
+    completeForgetPassword
+}

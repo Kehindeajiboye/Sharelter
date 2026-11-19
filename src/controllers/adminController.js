@@ -369,7 +369,7 @@ const suspendListing = async (req, res) => {
 
         const user = await User.findByPk(listing.user_id, { transaction: t })
 
-        if (!listing.suspended) {
+        if (listing.suspended) {
             return res.status(500).json({
                 status: false,
                 message: "Listing is already suspended"
@@ -383,7 +383,7 @@ const suspendListing = async (req, res) => {
             })
         }
 
-        listing.suspended = false
+        listing.suspended = true
         await listing.save({ transaction: t })
 
         const audit_id = uuidv4(); // Generate a unique audit_id
@@ -436,14 +436,14 @@ const unsuspendListing = async (req, res) => {
 
         const user = await User.findByPk(listing.user_id, { transaction: t })
 
-        if (listing.suspended) {
+        if (!listing.suspended) {
             return res.status(500).json({
                 status: false,
                 message: "Listing is already unsuspended"
             })
         }
 
-        listing.suspended = true
+        listing.suspended = false
         await listing.save({ transaction: t })
 
         const audit_id = uuidv4(); // Generate a unique audit_id

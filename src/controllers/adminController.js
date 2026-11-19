@@ -3,71 +3,71 @@ const { v4: uuidv4 } = require("uuid");
 const { sendEmail } = require("../utils/utils");
 
 
-const getAllUsers = async (req, res) => {
-    try {
-        const users = await User.findAll({
-            where: {
-                is_active: true,
-                role: ["tenant", "landlord", "agent"]
-            },
-            attributes: { exclude: ["password_salt", "password_hash"] }
-        })
-        res.status(200).json({
-            status: true,
-            message: "Users fetched successfully",
-            data: users
-        })
-    } catch (error) {
-        res.status(500).json({
-            status: false,
-            message: "Error fetching users"
-        })
-    }
-}
+// const getAllUsers = async (req, res) => {
+//     try {
+//         const users = await User.findAll({
+//             where: {
+//                 is_active: true,
+//                 role: ["tenant", "landlord", "agent"]
+//             },
+//             attributes: { exclude: ["password_salt", "password_hash"] }
+//         })
+//         res.status(200).json({
+//             status: true,
+//             message: "Users fetched successfully",
+//             data: users
+//         })
+//     } catch (error) {
+//         res.status(500).json({
+//             status: false,
+//             message: "Error fetching users"
+//         })
+//     }
+// }
 
 
-const getAllListings = async (req, res) => {
-    try {
-        const listings = await Listing.findAll({
-            where: {
-                verification_status: "verified"
-            },
-            attributes: { exclude: ["reason_for_rejection"] }
-        })
-        res.status(200).json({
-            status: true,
-            message: "Listings fetched successfully",
-            data: listings
-        })
-    } catch (error) {
-        res.status(500).json({
-            status: false,
-            message: "Error fetching listings"
-        })
-    }
-}
+// const getAllListings = async (req, res) => {
+//     try {
+//         const listings = await Listing.findAll({
+//             where: {
+//                 verification_status: "verified"
+//             },
+//             attributes: { exclude: ["reason_for_rejection"] }
+//         })
+//         res.status(200).json({
+//             status: true,
+//             message: "Listings fetched successfully",
+//             data: listings
+//         })
+//     } catch (error) {
+//         res.status(500).json({
+//             status: false,
+//             message: "Error fetching listings"
+//         })
+//     }
+// }
 
 
-const getPendingLists = async (req, res) => {
-    try {
-        const listings = await Listing.findAll({
-            where: {
-                verification_status: "pending"
-            },
-            attributes: { exclude: ["reason_for_rejection"] }
-        })
-        res.status(200).json({
-            status: true,
-            message: "Pending listings fetched successfully",
-            data: listings
-        })
-    } catch (error) {
-        res.status(500).json({
-            status: false,
-            message: "Error fetching pending listings"
-        })
-    }
-}
+// const getPendingLists = async (req, res) => {
+//     try {
+//         const listings = await Listing.findAll({
+//             where: {
+//                 verification_status: "pending"
+//             },
+//             attributes: { exclude: ["reason_for_rejection"] }
+//         })
+//         res.status(200).json({
+//             status: true,
+//             message: "Pending listings fetched successfully",
+//             data: listings
+//         })
+//     } catch (error) {
+//         res.status(500).json({
+//             status: false,
+//             message: "Error fetching pending listings"
+//         })
+//     }
+// }
 
 // const getPendingReports = async (req, res) => {
 //     try {
@@ -89,10 +89,111 @@ const getPendingLists = async (req, res) => {
 //     }
 // }
 
+const getAllUsers = async (req, res) => {
+    try {
+        const page = Math.max(1, parseInt(req.query.page, 10) || 1); // Default to page 1 if not provided
+        const limit = Math.min(10, parseInt(req.query.limit, 10) || 10); // Default to 10 items per page if not provided
+        const offset = (page - 1) * limit;
+
+        const { count, rows: users } = await User.findAndCountAll({
+            where: {
+                is_active: true,
+                role: ["tenant", "landlord", "agent"]
+            },
+            attributes: { exclude: ["password_salt", "password_hash"] },
+            limit,
+            offset
+        });
+
+        res.status(200).json({
+            status: true,
+            message: "Users fetched successfully",
+            data: users,
+            pagination: {
+                page,
+                limit,
+                total: count
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: false,
+            message: "Error fetching users"
+        });
+    }
+}
+
+
+const getAllListings = async (req, res) => {
+    try {
+        const page = Math.max(1, parseInt(req.query.page, 10) || 1); // Default to page 1 if not provided
+        const limit = Math.min(10, parseInt(req.query.limit, 10) || 10); // Default to 10 items per page if not provided
+        const offset = (page - 1) * limit;
+
+        const { count, rows: listings } = await Listing.findAndCountAll({
+            where: {
+                verification_status: "verified"
+            },
+            attributes: { exclude: ["reason_for_rejection"] },
+            limit,
+            offset
+        });
+        res.status(200).json({
+            status: true,
+            message: "Verified listings fetched successfully",
+            data: listings,
+            pagination: {
+                page,
+                limit,
+                total: count
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: false,
+            message: "Error fetching verified listings"
+        });
+    }
+}
+
+
+const getPendingListings = async (req, res) => {
+    try {
+        const page = Math.max(1, parseInt(req.query.page, 10) || 1); // Default to page 1 if not provided
+        const limit = Math.min(10, parseInt(req.query.limit, 10) || 10); // Default to 10 items per page if not provided
+        const offset = (page - 1) * limit;
+
+        const { count, rows: listings } = await Listing.findAndCountAll({
+            where: {
+                verification_status: "pending"
+            },
+            attributes: { exclude: ["reason_for_rejection"] },
+            limit,
+            offset
+        });
+        res.status(200).json({
+            status: true,
+            message: "Pending listings fetched successfully",
+            data: listings,
+            pagination: {
+                page,
+                limit,
+                total: count
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: false,
+            message: "Error fetching pending listings"
+        });
+    }
+}
+
+
 const getPendingReports = async (req, res) => {
     try {
-        const page = Math.max(1, parseInt(req.query.page)) || 1; // Default to page 1 if not provided
-        const limit = Math.min(1, parseInt(req.query.limit)) || 10; // Default to 10 items per page if not provided
+        const page = Math.max(1, parseInt(req.query.page, 10) || 1); // Default to page 1 if not provided
+        const limit = Math.min(10, parseInt(req.query.limit, 10) || 10); // Default to 10 items per page if not provided
 
         const offset = (page - 1) * limit;
         const { count, rows: reports } = await Report.findAndCountAll({
@@ -251,6 +352,7 @@ const rejectListing = async (req, res) => {
     }
 }
 
+
 const suspendListing = async (req, res) => {
     const { listing_id } = req.params
     const t = await sequelize.transaction();
@@ -316,6 +418,7 @@ const suspendListing = async (req, res) => {
         })
     }
 }
+
 
 const unsuspendListing = async (req, res) => {
     const { listing_id } = req.params
@@ -383,7 +486,7 @@ const unsuspendListing = async (req, res) => {
 module.exports = {
     getAllUsers,
     getAllListings,
-    getPendingLists,
+    getPendingListings,
     rejectListing,
     approveListing,
     suspendListing,

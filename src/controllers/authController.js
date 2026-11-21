@@ -378,11 +378,13 @@ const completeForgetPassword = async (req, res) => {
     }
 }
 
+
+
 module.exports = {
-    createNewUser,
-    verifyUser,
-    resendVerificationCode,
-    loginUser,
-    startForgetPassword,
-    completeForgetPassword
-}
+            createNewUser,
+            verifyUser,
+            resendVerificationCode,
+            loginUser,
+            startForgetPassword,
+            completeForgetPassword
+        }

@@ -74,6 +74,10 @@ module.exports = {
         allowNull: true,
         defaultValue: null
       },
+      suspended: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

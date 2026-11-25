@@ -475,7 +475,7 @@ const unsuspendListing = async (req, res) => {
         await t.rollback(); // Rollback the transaction in case of error
         res.status(500).json({
             status: false,
-            message: "Error suspending listing"
+            message: "Error unsuspending listing"
         })
     }
 }

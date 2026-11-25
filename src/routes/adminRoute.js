@@ -14,3 +14,5 @@ router.patch('/reject-listing/:listingId', authenticate, authorize('admin'), rej
 router.patch('/suspend-listing/:listingId', authenticate, authorize('admin'), suspendListing);
 router.patch('/unsuspend-listing/:listingId', authenticate, authorize('admin'), unsuspendListing);
 
+module.exports = router;
+

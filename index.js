@@ -43,10 +43,10 @@ app.get("/", (req, res) => {
   res.send("WELCOME TO SHARELTER");
 });
 
+app.use('/auth', authRoute);
+app.use('/admin', adminRoute);
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 
-
-app.use('/auth', authRoute);
-app.use('/admin', adminRoute);

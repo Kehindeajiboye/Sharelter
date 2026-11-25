@@ -1,8 +1,10 @@
 require("dotenv").config();
 const express = require("express");
+const app = express();
 const swaggerUi = require("swagger-ui-express");
 const swaggerJsdoc = require("swagger-jsdoc");
 const authRoute = require("./src/routes/authRoute");
+const userRoute = require("./src/routes/userRoute");
 const adminRoute = require("./src/routes/adminRoute");
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -49,4 +51,5 @@ app.listen(PORT, () => {
 
 
 app.use('/auth', authRoute);
+app.use('/user', userRoute);
 app.use('/admin', adminRoute);
